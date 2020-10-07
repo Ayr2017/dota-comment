@@ -29,7 +29,7 @@
               <span
                 class="comment-header__element font-weight-thin"
                 @click="openCommentField"
-                v-if="commentTree.table_id<5"
+                v-if="commentTree.depth<5"
               >
                 <v-btn text class="btn--lower" style="font-size: 16px"
                   ><v-icon small class="mb-n1">mdi-keyboard-return </v-icon>
@@ -91,7 +91,7 @@
                 ></v-textarea>
               </v-col>
             </v-row>
-            <v-btn text class="mr-4" @click="submit({text:commentText,parentTableId:commentTree.table_id, parentCommentId:commentTree.id } )"> Отправить </v-btn>
+            <v-btn text class="mr-4" :disabled="!isValidMessage(commentText)" @click="submit({text:commentText,parentTableId:commentTree.table_id, parentCommentId:commentTree.id } )"> Отправить </v-btn>
             <v-btn text @click="closeCommentField"> Отменить </v-btn>
           </v-container>
         </v-form>
@@ -120,7 +120,6 @@ export default {
     commentText: "",
   }),
   mounted() {
-    // console.log(this.commentTree);
   },
   methods: {
     ...mapActions(["likeComment","dislikeComment","sendComment"]),
@@ -139,11 +138,13 @@ export default {
       return getTimeDiff(date,new Date());
     },
     getColor(value){
-      console.log(value);
         if (value == 0) return null;
         else if (value > 0) return 'color:green'
         else return 'color:red'
-    }
+    },
+    isValidMessage(text){
+      return Boolean(text.trim());
+    },
   },
 };
 </script>

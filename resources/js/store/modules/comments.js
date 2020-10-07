@@ -90,11 +90,9 @@ export default {
         },
         setSortBy(state, fieldName){
             state.sortBy = fieldName;
-            console.log(state.sortBy)
         },
         setSortDir(state, dirName){
             state.sortDir = dirName;
-            console.log(state.sortDir);
         },
     }
 }

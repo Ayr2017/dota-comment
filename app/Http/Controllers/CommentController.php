@@ -2,15 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Comment;
 use Illuminate\Http\Request;
-use App\Models\Comment1;
-use App\Models\Comment2;
-use App\Models\Comment3;
-use App\Models\Comment4;
-use App\Models\Comment5;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Log;
 
 class CommentController extends Controller
 {
@@ -19,13 +14,33 @@ class CommentController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+
     public function index(Request $request)
     {
+        $post_id = $request->post_id;
         $sort_by = $request->sort_by ?? 'rating';
         $sort_dir = $request->sort_dir ??'desc';
 
-        $comments = Comment1::with(['comments','user'])->where('post_id', $request->post_id)->orderBy($sort_by, $sort_dir )->get();
-        return json_encode($comments);
+        $comm = Comment::with(['comments','user'])->where('post_id', $post_id)->orderBy($sort_by, $sort_dir )->get();
+        $this->setDepth($comm);        
+        return json_encode($comm);
+    }
+
+    private function setDepth($comments, $depth=0){
+        $depth++;
+        if(count($comments)>0) {
+            foreach($comments as $item){
+                $item['depth'] = $depth;
+                if($item['comments']){
+                    $this->setDepth($item['comments'], $depth);
+                }
+                else {
+                    $item['depth'] = $depth;
+                    return $item;
+                }
+            }
+        }
+        return $comments;
     }
 
     /**
@@ -47,45 +62,22 @@ class CommentController extends Controller
     public function store(Request $request)
     {
         $post_id = $request->postId;
-        $text = $request->text;
         $parent_id= $request->parentCommentId;
-        $table_id = $request->parentTableId+1;
+        $text = $request->text;
         $user_id = Auth::id() ?? 1;
         
-        if($post_id){
-            $comment = new Comment1;
-            $comment->user_id = $user_id;
-            $comment->text = $text;
-            $comment->post_id = $post_id;
-            $result = $comment->save();
-            if($result){
-                return json_encode(['stored'=>true, 'storedTableId'=>$table_id]);
-            }else{
-                return json_encode(['stored'=>false, 'errorMessage'=>'Try again!']);
-            }     
-        }
-
-        switch($table_id){
-            case 2: $comment = new Comment2;
-        break;
-            case 3: $comment = new Comment3;
-        break;
-            case 4: $comment = new Comment4;
-        break;
-            case 5: $comment = new Comment5;
-        break;
-            default: return json_encode(['error'=>'Unknown table '.$table_id]);
-        }
+        $comment = new Comment;
         $comment->user_id = $user_id;
-        $comment->parent_id = $parent_id;
         $comment->text = $text;
+        $comment->post_id = $post_id;
+        $comment->parent_id = $parent_id;
         $result = $comment->save();
         if($result){
-            return json_encode(['stored'=>true, 'storedTableId'=>$table_id]);
+            return json_encode(['stored'=>true]);
         }else{
             return json_encode(['stored'=>false, 'errorMessage'=>'Try again!']);
         }
-
+        
     }
 
     /**
@@ -122,19 +114,7 @@ class CommentController extends Controller
         $comment_id = $request->comment_id;
         $table_id = $request->table_id;
         $type = $request->type;
-        switch($table_id){
-            case 1: $comment = Comment1::where('id', $comment_id)->first();
-        break;
-            case 2: $comment = Comment2::where('id', $comment_id)->first();
-        break;
-            case 3: $comment = Comment3::where('id', $comment_id)->first();
-        break;
-            case 4: $comment = Comment4::where('id', $comment_id)->first();
-        break;
-            case 5: $comment = Comment5::where('id', $comment_id)->first();
-        break;
-            default: return json_encode(['error'=>'Unknown table '.$table_id]);
-        }
+        $comment  = Comment::where('id', $comment_id)->first();
         $comment->timestamps = false;
         $type == 'like'? $comment->rating++ : $comment->rating--;
         $comment->save();

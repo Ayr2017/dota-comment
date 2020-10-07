@@ -40,6 +40,7 @@
               <v-btn
                 text
                 class="btn--capitalize"
+                :disabled="!isValidMessage(commentText)"
                 @click="submit({ text: commentText, postId: 1 })"
               >
                 Отправить
@@ -53,7 +54,8 @@
         <CommentsTree :comments="allComments" />
       </v-container>
     </v-main>
-    <v-footer> FOOTER </v-footer>
+    <v-footer>
+    </v-footer>
   </v-app>
 </template>
 
@@ -71,7 +73,7 @@ export default {
   }),
   computed: {
     ...mapState(["comments"]),
-    ...mapGetters(["allComments", "getPostId","getSortBy","getSortDir"]),
+    ...mapGetters(["allComments", "getPostId", "getSortBy", "getSortDir"]),
   },
   watch: {
     sort(newValue, oldValue) {
@@ -89,7 +91,7 @@ export default {
           this.setSortDir("asc");
           break;
       }
-    this.getAllComments({ postId: 1 });
+      this.getAllComments({ postId: 1 });
     },
   },
   mounted() {
@@ -103,26 +105,13 @@ export default {
       this.commentText = "";
     },
     submit(data) {
-      console.log("Primary ", data);
       this.sendComment({ data });
       this.commentText = "";
     },
+    isValidMessage(text){
+      return Boolean(text.trim());
+    }
   },
 };
 </script>
 
-<style scoped>
-/* .v-btn {
-  font-weight: normal;
-  font-size: 16px;
-  color: #4e4d4d;
-}
-.v-btn-toggle:not(.v-btn-toggle--dense) .v-btn.v-btn.v-size--default {
-  height: 38px;
-  border-radius: 3px;
-}
-.v-btn.v-item--active.v-btn--active.v-btn--contained.theme--dark.v-size--default {
-  color: rgb(201, 200, 200);
-  background-color: #202020;
-} */
-</style>
